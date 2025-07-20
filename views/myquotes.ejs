@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Quotes</title>
+    <link href="/styles.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <style>
+        /* General Styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1 0 auto;
+        }
+
+        .current-page {
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 4px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            margin: 0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .tab-active {
+            background: #044907;
+        }
+
+        .quote-item {
+            background: #333;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            position: relative;
+            text-align: center; /* Center text */
+        }
+
+        .quote-item .quote-text {
+            margin-bottom: 40px; /* Ensure space for the buttons */
+        }
+
+        .quote-item .text-lg {
+            font-size: 1.125rem;
+            line-height: 1.5;
+            color: #e0e0e0;
+        }
+
+        .quote-item .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .quote-item .text-gray-600 {
+            color: #cfcfcf;
+        }
+
+        .quote-item .text-gray-500 {
+            color: #a0a0a0;
+        }
+
+        .quote-item .quote-author {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            text-align: right;
+            color: #84c483; /* Purple color for author name */
+        }
+
+        .quote-item .quote-actions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .quote-item .quote-actions a {
+            padding: 5px 10px; /* Added padding */
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .quote-item .edit-btn {
+            color: #1E90FF; /* Blue color for edit button */
+            background-color: #1E90FF1A; /* Light blue background */
+        }
+
+        .quote-item .delete-btn {
+            color: #FF1493; /* Pink color for delete button */
+            background-color: #FF14931A; /* Light pink background */
+        }
+
+        footer {
+            background: #2d2d2d;
+            color: #888;
+            padding: 10px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .popup-content {
+            background: #333; /* Same as .quote-item background */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            max-width: 500px;
+            width: 100%;
+            color: #e0e0e0; /* Matching text color */
+            border: 1px solid #444; /* Matching border color */
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #e0e0e0; /* Matching text color */
+        }
+
+        .popup-close:hover {
+            color: #fff;
+        }
+
+        .popup .bg-red-500 {
+            background-color: #ef4444; /* Tailwind CSS red-500 */
+        }
+
+        .popup .bg-gray-500 {
+            background-color: #6b7280; /* Tailwind CSS gray-500 */
+        }
+
+        .popup .text-white {
+            color: #ffffff;
+        }
+
+        .popup button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 1rem;
+            border: none;
+        }
+
+        .popup button.save-btn {
+            background-color: #1E90FF; /* Blue color for save button */
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="bg-transparent p-4 flex justify-between items-center shadow-md">
+        <a href="#" class="text-white text-lg font-bold hover:text-gray-400">Software Quotes</a>
+        <div class="flex items-center space-x-4">
+            <a href="/users/<%= userData._id %>/quoteshome" class="text-white hover:bg-gray-600 px-4 py-2 rounded transition">HOME</a>
+            <a href="/quotes/authors/<%= userData._id %>" class="text-white hover:bg-gray-600 px-4 py-2 rounded transition">AUTHORS</a>
+            <a href="/like/<%= userData._id %>" class="text-white hover:bg-gray-600 px-4 py-2 rounded transition">QUOTES</a>
+            
+            <a href="/users/<%= userData._id %>/quotes" class="text-white hover:bg-gray-600 px-4 py-2 rounded transition">MY QUOTES</a>
+            <div class="user-info flex items-center">
+                <span class="username text-white"><%= userData.first_name %></span>
+                <a href="/logout" class="logout-button text-white hover:text-gray-400" aria-label="Logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M10 17l-5-5 5-5v4h7v2h-7v4zM21 3h-6v2h6v14h-6v2h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto py-8">
+        <h1 class="text-2xl font-bold mb-4 text-white ml-4">My Quotes</h1>
+
+        <div class="tabs-container bg-gray-700 p-4 rounded-lg mb-4">
+            <div class="tabs flex justify-between">
+                <button class="tab tab-bordered tab-active text-white" hx-get="/api/added-quotes" hx-trigger="click" hx-target="#added-quotes">Added Quotes</button>
+                <button class="tab tab-bordered text-white" hx-get="/api/liked-quotes" hx-trigger="click" hx-target="#liked-quotes">Liked Quotes <span class="count">(<%= likedCount %>)</span></button>
+                <button class="tab tab-bordered text-white" hx-get="/api/disliked-quotes" hx-trigger="click" hx-target="#disliked-quotes">Disliked Quotes <span class="count">(<%= dislikedCount %>)</span></button>
+                
+            </div>
+        </div>
+
+        <div id="added-quotes" class="tab-content bg-transparent p-4 rounded-lg active">
+            <% addedQuotes.forEach(quote => { %>
+            <div class="quote-item" id="quote-<%= quote._id %>">
+                <div class="quote-text">
+                    <p class="text-lg"><%= quote.quote %></p>
+                    <p class="text-sm text-gray-500">Tags: <%= quote.tags %></p>
+                </div>
+                <div class="quote-author">
+                    - <%= quote.author %>
+                </div>
+                <div class="quote-actions">
+                    <a href="#" class="edit-btn text-blue-500" data-id="<%= quote._id %>" data-quote="<%= quote.quote %>" data-author="<%= quote.author %>" data-tags="<%= quote.tags %>" onclick="openEditPopup(event)">Edit</a>
+                    <a href="#" class="delete-btn text-red-500" data-delete-url="/quotes/delete/<%= quote._id %>" onclick="openDeletePopup(event)">Delete</a>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+
+        <div id="liked-quotes" class="tab-content bg-transparent p-4 rounded-lg">
+            <% likedQuotes.forEach(quote => { %>
+            <div class="quote-item">
+                <div class="quote-text">
+                    <p class="text-lg"><%= quote.quote %></p>
+                    <p class="text-sm text-gray-500">Tags: <%= quote.tags %></p>
+                </div>
+                <div class="quote-author">
+                    - <%= quote.author %>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+
+        <div id="disliked-quotes" class="tab-content bg-transparent p-4 rounded-lg">
+            <% dislikedQuotes.forEach(quote => { %>
+            <div class="quote-item">
+                <div class="quote-text">
+                    <p class="text-lg"><%= quote.quote %></p>
+                    <p class="text-sm text-gray-500">Tags: <%= quote.tags %></p>
+                </div>
+                <div class="quote-author">
+                    - <%= quote.author %>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- Edit Popup -->
+    <div id="edit-popup" class="popup fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closeEditPopup()">×</span>
+            <h2 class="text-xl font-bold mb-4">Edit Quote</h2>
+            <form id="edit-form" method="post" action="/quotes/edit">
+                <input type="hidden" name="id" id="edit-quote-id">
+                <div class="mb-4">
+                    <label for="edit-quote" class="block text-sm font-medium text-gray-700">Quote</label>
+                    <textarea id="edit-quote" name="quote" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-author" class="block text-sm font-medium text-gray-700">Author</label>
+                    <input type="text" id="edit-author" name="author" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-tags" class="block text-sm font-medium text-gray-700">Tags</label>
+                    <input type="text" id="edit-tags" name="tags" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Popup -->
+    <div id="delete-popup" class="popup" style="display: none;">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closeDeletePopup()">×</span>
+            <h2 class="text-xl font-bold mb-4">Are you Sure?</h2>
+            <p>You will not be able to recover this record!</p>
+            <div class="flex justify-end mt-4">
+                <button id="confirm-delete" class="bg-red-500 text-white px-4 py-2 rounded">Yes,Delete It</button>
+                <button onclick="closeDeletePopup()" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">No,Keep It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-transparent text-white p-4 text-center mt-auto">
+        <p>&copy; 2024 Software Quotes. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setupTabs();
+            setupEditForm();
+            setupDeletePopup();
+        });
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    tabs.forEach(t => t.classList.remove('tab-active'));
+                    tab.classList.add('tab-active');
+
+                    const target = tab.getAttribute('hx-target');
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === target.substring(1)) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }
+
+        function openEditPopup(event) {
+            event.preventDefault();
+            const link = event.currentTarget;
+            document.getElementById('edit-quote-id').value = link.getAttribute('data-id');
+            document.getElementById('edit-quote').value = link.getAttribute('data-quote');
+            document.getElementById('edit-author').value = link.getAttribute('data-author');
+            document.getElementById('edit-tags').value = link.getAttribute('data-tags');
+            document.getElementById('edit-popup').style.display = 'flex';
+        }
+
+        function closeEditPopup() {
+            document.getElementById('edit-popup').style.display = 'none';
+        }
+
+        function setupEditForm() {
+            document.getElementById('edit-form').addEventListener('submit', async event => {
+                event.preventDefault();
+                const formData = new FormData(event.currentTarget);
+                const data = Object.fromEntries(formData.entries());
+                const response = await fetch(`/quotes/update/${data.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(res => res.json());
+
+                if (response.message === 'Update successful') {
+                    updateQuoteItem(data);
+                    closeEditPopup();
+                } else {
+                    console.error('Error updating quote:', response);
+                }
+            });
+        }
+
+        function updateQuoteItem(data) {
+            const quoteItem = document.querySelector(`#quote-${data.id}`);
+            quoteItem.innerHTML = `
+                <div class="quote-text">
+                    <p class="text-lg">${data.quote}</p>
+                    <p class="text-sm text-gray-600">- ${data.author}</p>
+                    <p class="text-sm text-gray-500">Tags: ${data.tags}</p>
+                </div>
+                <div class="quote-actions">
+                    <a href="#" class="edit-btn text-blue-500" data-id="${data.id}" data-quote="${data.quote}" data-author="${data.author}" data-tags="${data.tags}" onclick="openEditPopup(event)">Edit</a>
+                    <a href="#" class="delete-btn text-red-500" data-delete-url="/quotes/delete/${data.id}" onclick="openDeletePopup(event)">Delete</a>
+                </div>
+            `;
+        }
+
+        let deleteUrl = '';
+
+    function openDeletePopup(event) {
+        event.preventDefault();
+        deleteUrl = event.currentTarget.getAttribute('data-delete-url');
+        document.getElementById('delete-popup').style.display = 'flex';
+    }
+
+    async function handleDelete() {
+        try {
+            const response = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                document.querySelector(`#quote-${result.deletedQuote._id}`).remove();
+                closeDeletePopup();
+            } else {
+                console.error('Failed to delete quote:', result.message);
+            }
+        } catch (error) {
+            console.error('Error deleting quote:', error);
+        }
+    }
+
+    function closeDeletePopup() {
+        document.getElementById('delete-popup').style.display = 'none';
+    }
+
+    document.getElementById('confirm-delete').addEventListener('click', handleDelete);
+    </script>
+
+</body>
+
+</html>

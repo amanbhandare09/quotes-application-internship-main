@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Quotes - Login</title>
+    <link href="/styles.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    
+    
+</head>
+
+<body class="bg-gray-900 text-gray-200 flex flex-col h-screen">
+    <nav class="bg-transparent p-4 flex justify-between items-center">
+        <a href="#" class="text-white text-lg font-bold">Software Quotes</a>
+        <div>
+            <a href="#" class="text-white mr-4">QUOTES</a>
+            <label for="my-modal" class="btn btn-primary" hx-get="/auth/sign-in" hx-target="#modal-content"
+                hx-trigger="click">Login / Signup</label>
+        </div>
+    </nav>
+
+    <!-- Modal Container -->
+    <div id="modal-container">
+        <input type="checkbox" id="my-modal" class="modal-toggle" />
+        <div class="modal">
+            <div id="modal-content" class="modal-box relative w-75">
+                <!-- Login or Sign-Up form will be loaded here by HTMX -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content Container -->
+    <div class="container mx-auto p-4 flex-1">
+        <main class="quote-list">
+            <!-- Quotes will be dynamically loaded here -->
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-transparent text-white p-4 text-center mt-auto">
+        <p>&copy; 2024 Software Quotes. All rights reserved.</p>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+          const response = await fetch('/quotes/all');
+          const quotes = await response.json();
+          const quotesContainer = document.querySelector('.quote-list');
+  
+          quotes.forEach(quote => {
+            const quoteElement = document.createElement('div');
+            quoteElement.classList.add('card', 'shadow-md', 'bg-base-100', 'text-base-content', 'm-4');
+            
+            quoteElement.innerHTML = `
+              <div class="card-body">
+                <p class="text-lg font-semibold">"${quote.quote}"</p>
+                <p class="text-right italic">- ${quote.author}</p>
+              </div>
+            `;
+  
+            quotesContainer.appendChild(quoteElement);
+          });
+        });
+      </script>
+</body>
+
+</html>

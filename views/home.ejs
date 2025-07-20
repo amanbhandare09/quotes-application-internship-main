@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Software Quotes</title>
+  
+  <style>
+    /* Global Reset */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* Basic Styles for HTML and Body */
+    html, body {
+        width: 100%;
+        height: 100%;
+        background-color: #000; /* Ensure the background is black */
+        overflow-x: hidden;
+        overflow-y: scroll; /* Allow vertical scrolling */
+    }
+
+    /* Navbar Styles */
+    nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: transparent; /* Transparent background */
+        padding: 1em;
+        display: flex;
+        justify-content: space-between; /* Space out navbar items */
+        align-items: center;
+        z-index: 1000; /* Ensure it stays above other content */
+    }
+
+    /* Navbar Links and User Info Styles */
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 20px; /* Increase spacing between links */
+    }
+
+    .nav-links a {
+        color: white; /* Set link color to white */
+        text-decoration: none; /* Remove underline */
+    }
+    .nav-links1 a {
+        color: white; /* Set link color to white */
+        text-decoration: none; /* Remove underline */
+        font-size: 1.5em;
+    }
+
+
+    .nav-links a:hover {
+        text-decoration: none; /* Ensure no underline on hover */
+        font-weight: bold;
+    }
+
+
+    .nav-links .site-title {
+        font-size: 1.25em; /* Adjust font size as needed */
+        font-weight: bold;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        color: white;
+        margin-left: 20px; /* Space between the last link and user info */
+    }
+
+    .username {
+        margin-right: 10px; /* Space between username and logout button */
+        font-size: 16px;
+    }
+
+    .logout-button {
+        background-color: white; /* No background color */
+        border: none; /* Remove any borders */
+        color: white; /* Text color for the icon */
+        border-radius: 4px;
+        padding: 4px; /* Adjust padding as needed */
+        cursor: pointer;
+        font-size: 16px; /* Icon size */
+        margin-left: 8px; /* Space between username and logout button */
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logout-button svg {
+        width: 24px; /* Adjust size if needed */
+        height: 24px; /* Adjust size if needed */
+        fill: black; /* Adjust color if needed */
+    }
+
+    /* Updated Quote Container Styles */
+    .quote-container {
+        border: none; /* Remove border */
+        padding: 0; /* Remove padding */
+        margin-bottom: 20px;
+        box-shadow: none; /* Remove box shadow */
+        max-width: 1700px; /* Adjust width to match picture */
+        width: 80%;
+        height: auto; /* Allow height to adjust automatically */
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: transparent; /* Remove background color */
+    }
+
+    /* Quote Text Styles */
+    .quote {
+        font-size: 1.5em;
+        font-style: italic;
+        color: #fff; /* Adjust color as needed */
+    }
+
+    /* Author Text Styles */
+    .author {
+        font-size: 1em;
+        text-align: right;
+        color: #ccc; /* Adjust color as needed */
+        margin-top: 10px;
+    }
+
+    /* Container Styles */
+    .container {
+        width: 100%;
+        height: 1200vh;
+    }
+
+    /* Current Page Link Styles */
+    .current-page {
+        background-color: white;
+        color: black;
+        font-weight: bold;
+        padding: 8px 16px;
+        border-radius: 4px;
+        
+    }
+
+    /* Heading Styles */
+    h1 {
+        width: 100%;
+        color: #fff;
+        font-size: 25vw;
+        font-weight: 400;
+        text-align: center;
+        margin: 0;
+        text-align: left;
+        
+    }
+
+    /* Wrapper 404 and Outro Styles */
+    .wrapper-404, .outro {
+        background-color: #000; /* Ensure these sections have black background */
+    }
+
+    .wrapper-404 {
+        position: absolute;
+        top: 0px; 
+        width: 400vw;
+        height: 100vh;
+        will-change: transform;
+        padding-top: 70px; /* Space for navbar height */
+        background-color: #000; /* Ensure black background */
+        display: flex;
+        align-items: center; /* Center content vertically */
+        overflow: hidden;
+        
+    }
+
+    .outro {
+        position: absolute;
+        top: 150vh;
+        width: 100%;
+        height: 100vh;
+    }
+
+    .outro .quote .author {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: max-content;
+        font-size: 40px;
+        font-weight: lighter;
+        text-align: center;
+    }
+
+    /* Scrollbar Styles */
+    ::-webkit-scrollbar {
+        width: 12px; /* Width of the scrollbar */
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #000; /* Track color */
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #000; /* Handle color */
+        border-radius: 10px; /* Rounded corners */
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #000000; /* Handle color on hover */
+    }
+  </style>
+</head>
+<body>
+  <div class="container mb-4">
+    <nav class="bg-transparent p-4 flex justify-between items-center">
+      <div class="nav-links1">
+        <a href="#" class="site-title">Software Quotes</a>
+      </div>
+      
+      <div class="nav-links">
+        <a href="/users/<%= userData._id %>/quoteshome" class="home">HOME</a>
+        <a href="/quotes/authors/<%= userData._id %>" class="text-white">AUTHORS</a>        
+        <a href="/like/<%= userData._id %>" class="text-white">QUOTES</a>
+        <a href="/users/<%= userData._id %>/quotes" class="text-white">MY QUOTES</a>
+        <div class="user-info">
+          <span class="username"><%= userData.first_name %></span>
+          <a href="/logout" class="logout-button" aria-label="Logout">
+            <!-- SVG Logout Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M10 17l-5-5 5-5v4h7v2h-7v4zM21 3h-6v2h6v14h-6v2h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <section class="wrapper-404">
+    <h1>Quote of The Day</h1>
+  </section>
+  <section class="outro">
+    <% if (Quotes.length > 0) { %>
+        <div class="quote-container">
+            <div class="quote">
+                "<%= Quotes[0].quote %>"
+            </div>
+            <div class="author">
+                - <%= Quotes[0].author %>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="quote-container">
+            <div class="quote">
+                "No quote available."
+            </div>
+            <div class="author">
+                - Unknown
+            </div>
+        </div>
+    <% } %>
+  </section>
+  <!-- Footer -->
+  <footer class="bg-transparent text-white p-4 text-center mt-auto">
+    <p>&copy; 2024 Software Quotes. All rights reserved.</p>
+  </footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.addEventListener("DOMContentLoaded", function() {
+      ScrollTrigger.create({
+        trigger: ".wrapper-404",
+        start: "top top",
+        end: "+=1000vh",
+        scrub: 1,
+        pin: true,
+        onUpdate: (self) => {
+          gsap.to(".wrapper-404", {
+            x: `${-450 * self.progress}vw`,
+            duration: 0.5,
+            ease: "power3.out",
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

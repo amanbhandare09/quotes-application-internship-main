@@ -1,0 +1,27 @@
+
+<label for="my-modal" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
+<h2 class="text-center text-purple-600 text-2xl font-bold mb-4">Sign Up</h2>
+<form action="/auth/sign-up" method="POST">
+    <div class="mb-3">
+        <label for="fullname" class="block text-white">Full Name</label>
+        <input type="text" id="first_name" name="first_name" class="input input-bordered w-full text-white">
+    </div>
+    <div class="mb-3">
+        <label for="lastname" class="block text-white">Last Name</label>
+        <input type="text" id="last_name" name="last_name" class="input input-bordered w-full text-white">
+    </div>
+    <div class="mb-3">
+        <label for="email-signup" class="block text-white">E-Mail</label>
+        <input type="email" id="email" name="email" class="input input-bordered w-full text-white">
+    </div>
+    <div class="mb-4">
+        <label for="password-signup" class="block text-white">Password</label>
+        <input type="password" id="password" name="password" class="input input-bordered w-full text-white">
+    </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary w-full">Sign Up</button>
+    </div>
+    <div class="text-center mt-3">
+        <button type="button" class="btn btn-secondary" hx-get="/auth/sign-in" hx-target="#modal-content" hx-trigger="click">Login</button>
+    </div>
+</form>

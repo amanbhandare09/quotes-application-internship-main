@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Quotes</title>
+    <link href="/styles.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.4"></script>
+
+    <style>
+        .alphabet-list-container {
+            position: sticky;
+            top: 0;
+            background-color: #ffffff;
+            z-index: 10;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .alphabet-list {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .alphabet-list li {
+            margin: 5px;
+        }
+
+        .alphabet-list li a {
+            color: #4caf50;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 4px 8px;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            font-size: 14px;
+            display: block;
+            text-align: center;
+        }
+
+        .alphabet-list li a.active {
+            color: #fff;
+            background-color: #4caf50;
+        }
+
+        .alphabet-list li a.all-authors {
+            color: #e91e63;
+            border-color: #e91e63;
+        }
+
+        .alphabet-list li a.all-authors.active {
+            color: #fff;
+            background-color: #e91e63;
+        }
+
+        .authors-container {
+            display: flex; /* Enable flexbox */
+            justify-content: flex-start; /* Align items to the left */
+            width: 100%;
+            max-width: 600px;
+            height: 245px;
+            overflow-y: auto;
+            margin: 20px auto 0;
+        }
+
+        .authors-list {
+            flex: 1; /* Allow list to grow and fill available space */
+        }
+
+        .author-item {
+            color: purple;
+            font-size: 18px;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .current-page {
+            background-color: white;
+            color: black;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col bg-gray-900">
+    <!-- Header Container -->
+    <div class="container mx-auto mb-4">
+        <nav class="bg-transparent p-4 flex justify-between items-center fixed top-0 left-0 w-full z-50">
+            <a href="#" class="text-white text-lg font-bold">Software Quotes</a>
+            <div class="flex items-center space-x-4">
+                <a href="/users/<%= userData._id %>/quoteshome" class="text-white">HOME</a>
+                <a href="/quotes/authors/<%= userData._id %>" class="text-white current-page">AUTHORS</a>        
+                <a href="/like/<%= userData._id %>" class="text-white">QUOTES</a>
+                <a href="/users/<%= userData._id %>/quotes" class="text-white">MY QUOTES</a>
+                <div class="user-info">
+                    <span class="username text-white mr-4"><%= userData.first_name %></span>
+                    <a href="/logout" class="logout-button text-white mr-4" aria-label="Logout">
+                      <!-- SVG Logout Icon -->
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path d="M10 17l-5-5 5-5v4h7v2h-7v4zM21 3h-6v2h6v14h-6v2h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"/>
+                      </svg>
+                    </a>
+                            </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content container mx-auto mt-20 p-4 flex flex-col">
+        <!-- Author Section -->
+        <div class="bg-white p-4 rounded-lg shadow-lg mb-4">
+            <h2 class="text-xl font-bold mb-3 text-black">Authors</h2>
+            <div class="flex items-center mb-4">
+                <input type="text" id="searchInput" placeholder="Search..." class="input input-bordered w-full">
+                <button id="searchButton" class="btn btn-primary ml-2"
+                        hx-trigger="click"
+                        hx-get=""
+                        hx-target="#quote-list"
+                        hx-swap="innerHTML">
+                    Search
+                </button>
+            </div>
+            <div id="quote-list" class="mt-4"></div>
+        </div>
+
+        <!-- List of Authors Section -->
+       <!-- List of Authors Section -->
+<div class="bg-white p-4 rounded-lg shadow-lg flex-1">
+    <div class="alphabet-list-container">
+        <ul class="alphabet-list" id="alphabet-list"></ul>
+    </div>
+    <div class="authors-container">
+        <ul id="authors-list" class="authors-list"></ul>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-transparent text-white p-4 text-center mt-auto">
+    <p>&copy; 2024 Software Quotes. All rights reserved.</p>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const authorsList = document.getElementById('authors-list');
+        const alphabetList = document.getElementById('alphabet-list');
+
+        try {
+            const response = await fetch('/quotes/allAuthors');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const authors = await response.json();
+
+            // Generate alphabet list dynamically
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            alphabet.split('').forEach(letter => {
+                const letterElement = document.createElement('li');
+                const linkElement = document.createElement('a');
+                linkElement.textContent = letter;
+                linkElement.href = '#';
+                linkElement.dataset.letter = letter;
+                linkElement.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    filterAuthorsByLetter(letter);
+                });
+                letterElement.appendChild(linkElement);
+                alphabetList.appendChild(letterElement);
+            });
+
+            // Generate 'All Authors' link
+            const allAuthorsElement = document.createElement('li');
+            const allAuthorsLink = document.createElement('a');
+            allAuthorsLink.textContent = 'ALL AUTHORS';
+            allAuthorsLink.href = '#';
+            allAuthorsLink.classList.add('all-authors');
+            allAuthorsLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                displayAuthors(authors);
+            });
+            allAuthorsElement.appendChild(allAuthorsLink);
+            alphabetList.appendChild(allAuthorsElement);
+
+            // Display all authors initially
+            displayAuthors(authors);
+
+            function displayAuthors(authors) {
+                authorsList.innerHTML = authors.map(author => `
+                    <li class="author-item">${author}</li>
+                `).join('');
+            }
+
+            function filterAuthorsByLetter(letter) {
+                const filteredAuthors = authors.filter(author => author.toLowerCase().startsWith(letter.toLowerCase()));
+                displayAuthors(filteredAuthors);
+            }
+        } catch (error) {
+            console.error('Error fetching authors:', error);
+            authorsList.innerHTML = '<p>Error fetching authors.</p>';
+        }
+    });
+</script>
+        
+    </script>
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function () {
+            const searchInput = document.getElementById('searchInput').value;
+            const url = `/quotes/authorSearch?author=${encodeURIComponent(searchInput)}`;
+            this.setAttribute('hx-get', url);
+            htmx.process(this); // Trigger HTMX processing
+        });
+    </script>
+    
+</body>
+</html>

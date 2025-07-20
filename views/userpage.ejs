@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Quotes</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <link href="/styles.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <style>
+        .current-page {
+          background-color: white;
+          color: black;
+          font-weight: bold;
+          padding: 8px 16px;
+          border-radius: 4px;
+        }
+        .avatar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+        }
+        .avatar::after {
+          content: '<%= userData.first_name %>';
+        }
+        .avatar-button {
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
+          font-size: 16px;
+          margin-left: 8px;
+        }
+
+        .card-body {
+            background-color: #1F2937; /* Tailwind's bg-gray-800 */
+            color: white; /* Ensure text is visible on dark background */
+            border: 1px solid #4B5563; /* Tailwind's border-gray-600 */
+            padding: 16px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reaction-buttons {
+            display: flex;
+            gap: 1rem; /* Space between the buttons */
+        }
+
+        .like-button, .dislike-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* Space between the icon and the button */
+        }
+
+        .like-button i, .dislike-button i {
+            font-size: 1.5rem; /* Adjust the size of the icons */
+        }
+
+        .like-button button, .dislike-button button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem; /* Adjust the font size of the button text */
+        }
+
+        .quote-author-reactions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quote-author-reactions .reaction-buttons {
+            flex: 1; /* Ensure the reaction buttons take up space on the left */
+        }
+
+        .quote-author-reactions .text-right {
+            margin-left: auto; /* Push the author's name to the right */
+            padding: 1rem 1rem;
+        }
+    
+
+        .add-quote-button {
+            background-color: #3B82F6; /* Tailwind's blue-500 */
+            color: white;
+        }
+
+      </style>
+      
+</head>
+<body class="h-screen flex flex-col">
+    <!-- Header Container -->
+    <div class="container mx-auto mb-4">
+        <nav class="bg-transparent p-4 flex justify-between items-center">
+          <a href="#" class="text-white text-lg font-bold">Software Quotes</a>
+          <div class="flex items-center space-x-4">
+            <a href="/users/<%= userData._id %>/quoteshome" class="text-white">HOME</a>
+            <a href="/quotes/authors/<%= userData._id %>" class="text-white">AUTHORS</a>        
+            <a href="/like/<%= userData._id %>" class="text-white current-page">QUOTES</a>
+            <a href="/users/<%= userData._id %>/quotes" class="text-white">MY QUOTES</a>
+            <div class="dropdown dropdown-end">
+              <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                <!-- Username displayed here -->
+                <button class="avatar-button" aria-label="Dropdown Button">&#x25BC;</button>
+              </div>
+              <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                <li><a href="#" id="profileButton" hx-get="/edit" hx-target="#modal-content1" hx-trigger="click">Profile</a></li>
+                <li><a href="/logout">LOGOUT</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+      
+   
+    <!-- Main Content Container -->
+    <div class="container mx-auto p-4 flex-1">
+        <main>
+            <div class="mb-6">
+                <div class="flex items-center space-x-4">
+                    <select id="filterSelect" class="select select-bordered">
+                        <option value="author">Author</option>
+                        <option value="tags">Tags</option>
+                    </select>
+                    <input id="searchInput" type="text" placeholder="Search..." class="input input-bordered w-full">
+                    <button id="searchButton" class="btn btn-primary" hx-trigger="click" hx-get="" hx-target="#quote-list">Search</button>
+                    <button id="resetButton" class="btn btn-secondary" hx-get="/quotes" hx-target="#quote-list">Reset</button>
+                </div>
+               
+                <div id="quote-list"></div>
+               
+                <button id="addQuoteButton" class="btn btn-primary mt-4">Add Quote</button>
+            </div>
+   
+            <div class="container mx-auto p-4 flex-1 bg-transparent rounded-md">
+                <main class="quote-list">
+                    <!-- Quotes will be dynamically loaded here -->
+                    <% quotes.forEach(quote => { %>
+                        <div class="card shadow-md bg-base-100 text-base-content m-4">
+                            <div class="card-body">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-lg font-semibold">"<%= quote.quote %>"</p>
+                                    <% if (quote.userId.toString() === userData._id.toString()) { %>
+                                        <i class='bx bxs-user-rectangle user-quote-icon'></i>
+                                    <% } %>
+                                </div>
+                                <div class="quote-author-reactions flex justify-between items-center mt-2">
+                                    <div class="reaction-buttons flex gap-4">
+                                        <% if (quote.userId.toString() !== userData._id.toString()) { %>
+                                            <div class="like-button">
+                                                <% const userReaction = userReactions.find(reaction => reaction.quoteId.toString() === quote._id.toString()); %>
+                                                <i class='bx <%= userReaction && userReaction.like ? "bxs-like liked" : "bx-like" %>'
+                                                   hx-patch="/quotes/<%= quote._id %>/like/<%= userData._id %>/<%= userReaction && userReaction.like ? 'down' : 'up' %>"
+                                                   hx-swap="outerHTML">
+                                                </i>
+                                                <button hx-get="/quotes/liked/users/<%= quote._id %>" hx-target="#liked-users-<%= quote._id %>" hx-swap="innerHTML">
+                                                    <i class='bx bx-show'></i>
+                                                </button>
+                                                <div class="reaction-users" id="liked-users-<%= quote._id %>"></div>
+                                            </div>
+                                            <div class="dislike-button">
+                                                <i class='bx <%= userReaction && userReaction.dislike ? "bxs-dislike disliked" : "bx-dislike" %>'
+                                                   hx-patch="/quotes/<%= quote._id %>/dislike/<%= userData._id %>/<%= userReaction && userReaction.dislike ? 'down' : 'up' %>"
+                                                   hx-swap="outerHTML">
+                                                </i>
+                                                <button hx-get="/quotes/disliked/users/<%= quote._id %>" hx-target="#disliked-users-<%= quote._id %>" hx-swap="innerHTML">
+                                                    <i class='bx bx-show'></i>
+                                                </button>
+                                                <div class="reaction-users" id="disliked-users-<%= quote._id %>"></div>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <p class="text-right italic text-purple-500">- <%= quote.author %></p>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </main>
+            </div>
+            
+            
+
+</main>
+</div>
+
+
+
+
+
+    <!-- Modal Container for Profile -->
+    <div id="modal-container1" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="modal-box relative w-3/4 bg-white p-4 rounded-lg">
+            <button id="close-modal1" class="btn btn-sm btn-circle absolute right-2 top-2">✕</button>
+            <div id="modal-content1">
+                <!-- Edit Profile form will be loaded here by HTMX -->
+                            <!-- edit-profile.html -->
+                <form id="editProfileForm" hx-patch="http://localhost:3050/edit" hx-target="#modal-content1" hx-swap="innerHTML">
+                    <input type="hidden" name="user_id" value="<%= userData._id %>">
+ 
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="first_name">First Name</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="first_name" name="first_name" type="text" placeholder="First Name" value="<%= userData.first_name %>">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="last_name">Last Name</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="last_name" name="last_name" type="text" placeholder="Last Name" value="<%= userData.last_name %>">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" name="email" type="email" placeholder="Email" value="<%= userData.email %>">
+                    </div>
+                 
+                    <div id="message" class="mb-4"></div>
+ 
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+                <button type="button" id="delete-account" class="btn btn-secondary mt-2 mx-auto block" hx-delete="/delete/<%= userData._id %>" hx-confirm="Are you sure you want to delete your account?" hx-target="#message" hx-swap="outerHTML">Delete Account</button>
+ 
+            </div>
+        </div>
+    </div>
+ 
+    <!-- Modal Container for Adding Quote -->
+    <div id="myModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-40 flex items-center justify-center">
+        <div class="bg-gray-800 p-8 border border-gray-300 w-4/5 md:w-1/2 lg:w-1/3 rounded-lg">
+            <span class="close text-gray-400 float-right text-2xl font-bold cursor-pointer hover:text-white">&times;</span>
+            <h2 class="text-xl font-bold mb-4 text-white">Add a new quote</h2>
+            <form id="addQuoteForm" hx-post="http://localhost:3050/quotes/add" hx-target="#quote-list" hx-swap="outerHTML">
+                <input type="hidden" name="user_id" value="<%= userData._id %>">
+ 
+                <div class="mb-4">
+                    <label class="block text-white text-sm font-bold mb-2" for="quoteText">Quote</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-black leading-tight focus:outline-none focus:shadow-outline bg-white" id="quote" name="quote" type="text" placeholder="Enter quote" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-white text-sm font-bold mb-2" for="quoteAuthor">Author</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-black leading-tight focus:outline-none focus:shadow-outline bg-white" id="author" name="author" type="text" placeholder="Enter author" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-white text-sm font-bold mb-2" for="quoteTags">Tags</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-black leading-tight focus:outline-none focus:shadow-outline bg-white" id="tags" name="tags" type="text" placeholder="Enter tags">
+                </div>
+                <button type="submit" class="btn btn-primary">Add Quote</button>
+            </form>
+        </div>
+    </div>
+
+    
+ 
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 p-4 text-center mt-auto">
+        <p>&copy; 2024 Software Quotes. All rights reserved.</p>
+    </footer>
+ 
+    <!-- <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+          const response = await fetch('/quotes/all');
+          const quotes = await response.json();
+          const quotesContainer = document.querySelector('.quote-list');
+ 
+          quotes.forEach(quote => {
+            const quoteElement = document.createElement('div');
+            quoteElement.classList.add('card', 'shadow-md', 'bg-base-100', 'text-base-content', 'm-4');
+           
+            quoteElement.innerHTML = `
+              <div class="card-body">
+                <p class="text-lg font-semibold">"${quote.quote}"</p>
+                <p class="text-right italic">- ${quote.author}</p>
+                <p>${quote.dislike}</p>
+              </div>
+            `;
+ 
+            quotesContainer.appendChild(quoteElement);
+          });
+        });
+      </script> -->
+   
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function (event) {
+            const filter = document.getElementById('filterSelect').value;
+            const query = document.getElementById('searchInput').value;
+           
+            let url;
+            if (filter === 'tags') {
+                url = `/quotes/searchTag?tags=${encodeURIComponent(query)}`;
+            } else if (filter === 'author') {
+                url = `/quotes/searchAuthor?author=${encodeURIComponent(query)}`;
+            }
+   
+            // Update the hx-get attribute dynamically
+            this.setAttribute('hx-get', url);
+   
+            // Trigger HTMX request manually
+            htmx.process(this);
+   
+            // Prevent the default form submission
+            event.preventDefault();
+        });
+    </script>
+    <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            const filterSelect = document.getElementById('filterSelect');
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const resetButton = document.getElementById('resetButton');
+            const addQuoteButton = document.getElementById('addQuoteButton');
+            const modal = document.getElementById('myModal');
+            const closeModal = document.getElementsByClassName('close')[0];
+            const addQuoteForm = document.getElementById('addQuoteForm');
+            const editProfileModal = document.getElementById('modal-container1');
+            const closeEditProfileModal = document.getElementById('close-modal1');
+ 
+            resetButton.addEventListener('click', () => {
+                searchInput.value = '';
+                document.getElementById('quote-list').hxGet('/quotes');
+            });
+ 
+            // Add Quote Modal functionality
+            addQuoteButton.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+            });
+ 
+            closeModal.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+ 
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+ 
+            addQuoteForm.addEventListener('htmx:afterSwap', () => {
+                addQuoteForm.reset();
+                modal.classList.add('hidden');
+            });
+ 
+            // Profile Modal functionality
+            document.getElementById('profileButton').addEventListener('click', (event) => {
+                event.preventDefault();
+                editProfileModal.classList.remove('hidden');
+            });
+ 
+            closeEditProfileModal.addEventListener('click', () => {
+                editProfileModal.classList.add('hidden');
+            });
+ 
+            window.addEventListener('click', (event) => {
+                if (event.target === editProfileModal) {
+                    editProfileModal.classList.add('hidden');
+                }
+            });
+ 
+            // Handle like and dislike buttons after content swap
+            document.getElementById('quote-list').addEventListener('htmx:afterSwap', () => {
+                document.querySelectorAll('.like-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const countSpan = button.querySelector('.like-count');
+                        countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                    });
+                });
+ 
+                document.querySelectorAll('.dislike-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const countSpan = button.querySelector('.dislike-count');
+                        countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                    });
+                });
+            });
+        });
+ 
+   
+ 
+    </script>
+</body>
+</html>
