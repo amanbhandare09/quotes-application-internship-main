@@ -3,7 +3,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const mongoose = require("mongoose");
 
-const connect = mongoose.connect("mongodb://localhost:27017/quotestest");
+const connect = mongoose.connect("mongodb+srv://aman-qt:qwerty123@quotestest.t5opzsp.mongodb.net/");
 
 const PORT = 3050;
 
